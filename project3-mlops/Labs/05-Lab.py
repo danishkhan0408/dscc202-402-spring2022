@@ -94,18 +94,31 @@ rf2 = RandomForestRegressor(n_estimators=100, max_depth=25)
 
 # pre-process train data
 X_train_processed = X_train.copy()
-X_train_processed["trunc_lat"] = #FILL_IN
-X_train_processed["trunc_long"] = #FILL_IN
-X_train_processed["review_scores_sum"] = #FILL_IN
-X_train_processed = X_train_processed.drop(FILL_IN, axis=1)
+X_train_processed["trunc_lat"] = round(X_train["latitude"], 3)
+X_train_processed["trunc_long"] = round(X_train["longitude"], 3)
+X_train_processed["review_scores_sum"] = (
+   X_train['review_scores_accuracy'] + 
+   X_train['review_scores_cleanliness']+
+   X_train['review_scores_checkin'] + 
+   X_train['review_scores_communication'] + 
+   X_train['review_scores_location'] + 
+   X_train['review_scores_value']
+)
+X_train_processed = X_train_processed.drop(["latitude", "longitude"], axis=1)
 
 # pre-process test data to obtain MSE
 X_test_processed = X_test.copy()
-X_test_processed["trunc_lat"] = #FILL_IN
-X_test_processed["trunc_long"] = #FILL_IN
-X_test_processed["review_scores_sum"] = #FILL_IN
-X_test_processed = X_test_processed.drop(FILL_IN, axis=1)
-
+X_test_processed["trunc_lat"] = round(X_test["latitude"], 3)  
+X_test_processed["trunc_long"] = round(X_test["longitude"], 3) 
+X_test_processed["review_scores_sum"] = (
+  X_test['review_scores_accuracy'] +
+  X_test['review_scores_cleanliness'] +
+  X_test['review_scores_checkin'] + 
+  X_test['review_scores_communication'] +
+  X_test['review_scores_location'] +
+  X_test['review_scores_value']
+)
+X_test_processed = X_test_processed.drop(["latitude", "longitude"], axis=1)
 
 # fit and evaluate new rf model
 rf2.fit(X_train_processed, y_train)
@@ -186,8 +199,18 @@ class RF_with_preprocess(mlflow.pyfunc.PythonModel):
 
     def preprocess_input(self, model_input):
         '''return pre-processed model_input'''
-        # FILL_IN
-        return
+        model_input["trunc_lat"] = round(model_input["latitude"], 3)
+        model_input["trunc_long"] = round(model_input["longitude"], 3)
+        model_input["review_scores_sum"] = ( 
+          model_input['review_scores_accuracy'] +
+          model_input['review_scores_cleanliness'] +
+          model_input['review_scores_checkin'] +
+          model_input['review_scores_communication'] +
+          model_input['review_scores_location'] +
+          model_input['review_scores_value']
+        )
+        model_input = model_input.drop(["latitude", "longitude"], axis=1)
+        return model_input
     
     def predict(self, context, model_input):
         processed_model_input = self.preprocess_input(model_input.copy())
@@ -240,20 +263,31 @@ class RF_with_postprocess(mlflow.pyfunc.PythonModel):
 
     def preprocess_input(self, model_input):
         '''return pre-processed model_input'''
-        # FILL_IN
-        return 
+        model_input["trunc_lat"] = round(model_input["latitude"], 3)
+        model_input["trunc_long"] = round(model_input["longitude"], 3)
+        model_input["review_scores_sum"] = ( 
+          model_input['review_scores_accuracy'] +
+          model_input['review_scores_cleanliness'] +
+          model_input['review_scores_checkin'] +
+          model_input['review_scores_communication'] +
+          model_input['review_scores_location'] +
+          model_input['review_scores_value']
+        )
+        model_input = model_input.drop(["latitude", "longitude"], axis=1)
+        return model_input
       
     def postprocess_result(self, results):
         '''return post-processed results
         Expensive: predicted price > 100
         Not Expensive: predicted price <= 100'''
-        # FILL_IN
-        return 
+        
+        return ["Expensive" if result>100 else "Not Expensive" for result in results]
     
     def predict(self, context, model_input):
         processed_model_input = self.preprocess_input(model_input.copy())
         results = self.rf.predict(processed_model_input)
         return self.postprocess_result(results)
+
 
 # COMMAND ----------
 
